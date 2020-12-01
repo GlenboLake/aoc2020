@@ -1,0 +1,6 @@
+name = "AoC2020"
+uuid = "b819ecd8-6d94-4550-a8f9-0900cdfdcfd9"
+authors = ["Glen Haber <glenbolake@gmail.com>"]
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
