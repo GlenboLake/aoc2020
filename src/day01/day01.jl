@@ -4,7 +4,7 @@ using AoC2020
 using Combinatorics
 
 function day01(input::String = readInput(joinpath(@__DIR__, "input.txt")))
-    nums = parse.(Int, split(input))
+    nums = parse.(Int, splitLines(input))
 
     function check(nums::Array{Int, 1}, n)
         combos = collect(combinations(nums, n))

@@ -19,4 +19,9 @@ function readInput(path::String)
     return s
 end
 
+export splitLines
+function splitLines(text::String)
+    eachline(IOBuffer(chomp(text)))
+end
+
 end # module
