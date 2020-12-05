@@ -2,18 +2,9 @@ module Day05
 
 using AoC2020
 
-function parseBinary(num::AbstractString, zero::Char, one::Char)
-    mapping = Dict(zero => '0', one => '1')
-    parse(Int, "0b" * map(c -> mapping[c], num))
-end
-
 function seatID(ticket::AbstractString)
-    # First 7 characters are the row, effectively a binary sequence with F=0/B=1
-    rowMapping = Dict('F' => '0', 'B' => '1')
-    seatMapping = Dict('L' => '0', 'R' => '1')
-    row = parseBinary(ticket[1:7], 'F', 'B')
-    seat = parseBinary(ticket[8:10], 'L', 'R')
-    row * 8 + seat
+    trans(c) = Dict(zip("FBLR", "0101"))[c]
+    parse(Int, map(trans, ticket), base=2)
 end
 
 function day05(input::String=readInput(joinpath(@__DIR__, "input.txt")))
