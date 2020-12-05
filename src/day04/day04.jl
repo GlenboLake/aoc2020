@@ -2,7 +2,7 @@ module Day04
 
 using AoC2020
 
-function validateHeight(height::Union{String,SubString})
+function validateHeight(height::AbstractString)
     value = parse(Int, height[1:end-2])
     unit = height[end-1:end]
     if unit == "cm"
