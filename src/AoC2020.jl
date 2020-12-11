@@ -24,4 +24,9 @@ function splitLines(text::String)
     eachline(IOBuffer(chomp(text)))
 end
 
+export stringAsGrid
+function stringAsGrid(string::String)
+    reduce(vcat, permutedims.(collect.(splitLines(string))))
+end
+
 end # module
