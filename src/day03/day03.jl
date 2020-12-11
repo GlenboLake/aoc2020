@@ -26,7 +26,7 @@ function part1(input::String = readInput(joinpath(@__DIR__, "input.txt")))
 end
 
 function part2(input::String = readInput(joinpath(@__DIR__, "input.txt")))
-    grid = reduce(vcat, permutedims.(collect.(splitLines(input))))
+    grid = stringAsGrid(input)
 
     slopes = [(1,1), (3,1), (5,1), (7,1), (1,2)]
     prod([treesOnSlope(grid, r, d) for (r,d) ∈ slopes])
@@ -44,6 +44,7 @@ sample = """..##.......
 #...##....#
 .#..#...#.#"""
 
+flush(stdout)
 println("Part 1: $(part1())")
 println("Part 2: $(part2())")
 
