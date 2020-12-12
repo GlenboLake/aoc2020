@@ -19,8 +19,17 @@ dirNames = Dict(
     WEST => "West"
 )
 
-RIGHT = [0 -1; 1 0]
-LEFT = [0 1; -1 0]
+function rotateLeft(vector::Vector, angle::Int)
+    rotationMatrix = [ cosd(angle)  sind(angle)
+                      -sind(angle)  cosd(angle)]
+    Int.(rotationMatrix * vector)
+end
+
+function rotateRight(vector::Vector, angle::Int)
+    rotationMatrix = [cosd(angle)  -sind(angle)
+                      sind(angle)   cosd(angle)]
+    Int.(rotationMatrix * vector)
+end
 
 mutable struct Ship
     dir::Dir
@@ -39,13 +48,9 @@ end
 function command(ship::Ship, instruction::Tuple{Char,Int})
     cmd, amount = instruction
     if cmd == 'L'
-        for _ ∈ 1:90:amount
-            ship.dir = LEFT * ship.dir
-        end
+        ship.dir = rotateLeft(ship.dir, amount)
     elseif cmd == 'R'
-        for _ ∈ 1:90:amount
-            ship.dir = RIGHT * ship.dir
-        end
+        ship.dir = rotateRight(ship.dir, amount)
     else
         dir = cmd == 'F' ? ship.dir :
               cmd == 'N' ? NORTH :
@@ -68,18 +73,15 @@ function part1(input::String = readInput(joinpath(@__DIR__, "input.txt")))
 end
 
 function command(ship::Coord, waypoint::Coord, instruction::Tuple{Char,Int})
-    @show instruction
+    # Note: Update ship[:] and waypoint[:] to update the existing objects
+    # instead of replacing them
     cmd, amount = instruction
     if cmd == 'F'
         ship[:] = ship + amount .* waypoint
     elseif cmd == 'L'
-        for _ ∈ 1:90:amount
-            waypoint[:] = LEFT * waypoint
-        end
+        waypoint[:] = rotateLeft(waypoint, amount)
     elseif cmd == 'R'
-        for _ ∈ 1:90:amount
-            waypoint[:] = RIGHT * waypoint
-        end
+        waypoint[:] = rotateRight(waypoint, amount)
     else
         dir = cmd == 'N' ? NORTH :
               cmd == 'S' ? SOUTH :
@@ -94,13 +96,12 @@ function part2(input::String = readInput(joinpath(@__DIR__, "input.txt")))
     ship::Coord = [0,0]
     waypoint::Coord = [1,10]
     for i ∈ instructions
-        # @show ship, waypoint
         command(ship, waypoint, i)
     end
-    # @show ship, waypoint
     sum(abs.(ship))
 end
 
+flush(stdout)
 @show part1()
 @show part2()
 
