@@ -6,96 +6,80 @@ FLOOR = '.'
 EMPTY = 'L'
 TAKEN = '#'
 
-struct Layout
-    grid::Array{Char,2}
-    Layout(s::String) = new(stringAsGrid(s))
-    Layout(a::Array{Char,2}) = new(a)
-end
+Grid = Array{Char,2}
 
-using Base
-function Base.:(==)(a::Layout, b::Layout)
-    a.grid == b.grid
-end
-
-function Base.show(io::IO, x::Layout)
-    numRows = size(x.grid)[1]
-    print(io, "\n" * join([join(x.grid[r,:]) for r in 1:numRows], '\n'))
-end
-
-function countNeighbors(row::Int, col::Int, layout::Layout)
-    nRows, nCols = size(layout.grid)
+# Function to count adjacent occupied seats (for part 1)
+function countNeighbors(row::Int, col::Int, layout::Grid)
+    nRows, nCols = size(layout)
     rowRange = max(1, row-1):min(nRows, row+1)
     colRange = max(1, col-1):min(nCols, col+1)
     # @show row, col, layout
 
-    takenSeats = sum(layout.grid[rowRange,colRange] .== TAKEN)
+    takenSeats = sum(layout[rowRange,colRange] .== TAKEN)
     # Don't count this seat
-    if layout.grid[row,col] == TAKEN
+    if layout[row,col] == TAKEN
         takenSeats -= 1
     end
     takenSeats
 end
 
-function countLineOfSight(row::Int, col::Int, layout::Layout)
+# Function to count occupied seats via line of sight (for part 2)
+function countLineOfSight(row::Int, col::Int, layout::Grid)
     # Get every pair combination of 1/0/-1 except (0,0)
-    nRows, nCols = size(layout.grid)
+    nRows, nCols = size(layout)
     valid(coord::CartesianIndex) = coord[1] ∈ 1:nRows && coord[2] ∈ 1:nCols
     dirs = map(coord -> CartesianIndex(coord), setdiff(Base.Iterators.product(-1:1, -1:1), [(0,0)]))
     total = 0
     seat = CartesianIndex(row, col)
     for dir ∈ dirs
         coord = seat + dir
-        while valid(coord) && layout.grid[coord] == FLOOR
+        while valid(coord) && layout[coord] == FLOOR
             coord += dir
         end
-        if valid(coord) && layout.grid[coord] == TAKEN
+        if valid(coord) && layout[coord] == TAKEN
             total += 1
         end
     end
     total
 end
 
-function iterate(layout::Layout, neighborFunc::Function = countNeighbors)
-    newGrid = copy(layout.grid)
+@doc """
+Get the next generation of the grid according to the neighbor function.
+"crowded" is the number of people that have to be around an occupied seat
+before the person feels crowded and gets up
+""" ->
+function iterate(layout::Grid, crowded::Int, neighborFunc::Function)
+    newGrid = copy(layout)
     for i ∈ CartesianIndices(newGrid)
-        currentSeat = layout.grid[i]
+        currentSeat = layout[i]
         neighbors = neighborFunc(i[1], i[2], layout)
         if currentSeat == EMPTY && neighbors == 0
             newGrid[i] = TAKEN
-        elseif currentSeat == TAKEN && neighbors >= 4
+        elseif currentSeat == TAKEN && neighbors >= crowded
             newGrid[i] = EMPTY
         end
     end
-    Layout(newGrid)
+    newGrid
 end
 
-
-
-function day11(input::String = readInput(joinpath(@__DIR__, "input.txt")))
-    seats = Layout(input)
+function solve(input::String, crowded::Int, neighborFunc::Function)
+    seats = stringAsGrid(input)
     oldSeats = nothing
     while seats != oldSeats
-        @show seats
-        # print('.')
         oldSeats = seats
-        seats = iterate(seats, countLineOfSight)
+        seats = iterate(seats, crowded, neighborFunc)
     end
-    @show seats
-    sum(seats.grid .== TAKEN)
+    sum(seats .== TAKEN)
 end
 
-sample = """L.LL.LL.LL
-LLLLLLL.LL
-L.L.L..L..
-LLLL.LL.LL
-L.LL.LL.LL
-L.LLLLL.LL
-..L.L.....
-LLLLLLLLLL
-L.LLLLLL.L
-L.LLLLL.LL"""
+function day11(input::String = readInput(joinpath(@__DIR__, "input.txt")))
+    solve(input, 4, countNeighbors), solve(input, 5, countLineOfSight)
+end
 
 flush(stdout)
-println(day11(sample))
+part1, part2 = day11()
+
+@show part1
+@show part2
 
 end  # module Day11
