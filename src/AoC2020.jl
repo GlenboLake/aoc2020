@@ -20,7 +20,7 @@ function readInput(path::String)
 end
 
 export splitLines
-function splitLines(text::String)
+function splitLines(text::AbstractString)
     eachline(IOBuffer(chomp(text)))
 end
 
