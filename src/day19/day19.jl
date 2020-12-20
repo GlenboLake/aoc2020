@@ -3,31 +3,6 @@ module Day19
 using AoC2020
 using Test
 
-function part1(input::String = readInput(joinpath(@__DIR__, "input.txt")))
-    ruleLines, messages = collect.(splitLines.(split(input, "\n\n")))
-    patterns = Dict{AbstractString,AbstractString}()
-    while !isempty(ruleLines)
-        check = popfirst!(ruleLines)
-        key, rule = split(check, ": ")
-        dependencies = Set(map(m->rule[m], findall(r"\d+", rule)))
-        if !all(d->d ∈ keys(patterns), dependencies)
-            push!(ruleLines, check)
-            continue
-        end
-        if '"' ∈ rule
-            # This is a raw string, so it has one possibility
-            s = pop!(match(r"\"(.)\"", rule).captures)
-            patterns[key] = s
-        else
-            sequences = split.(strip.(split(rule, '|')))
-            regex = join(join.(map.(x->patterns[x], sequences)), '|')
-            patterns[key] = "(?:" * regex * ")"
-        end
-    end
-    pattern = Regex('^' * patterns["0"] * '$')
-    length(filter(msg -> occursin(pattern, msg), messages))
-end
-
 sample1 = string(chomp("""
 0: 1 2
 1: "a"
@@ -59,8 +34,52 @@ aaabbb
 aaaabbb
 """))
 
+function validate(msg::AbstractString, rules::Dict{Int,Union{AbstractString,Vector{Vector{Int}}}}, seq = [0])
+    if isempty(msg) || isempty(seq)
+        return isempty(msg) && isempty(seq)
+    end
+    firstRule = rules[seq[begin]]
+    if firstRule isa AbstractString
+        firstRule == msg[begin:begin] || return false
+        validate(msg[2:end], rules, seq[2:end])
+    else
+        any(validate(msg, rules, vcat(t, seq[2:end])) for t ∈ firstRule)
+    end
+end
+
+function parseInput(input::String)
+    ruleInput, msgInput = split(input, "\n\n")
+    messages = collect(splitLines(msgInput))
+    rules = Dict{Int,Union{AbstractString,Vector{Vector{Int}}}}()
+    for line ∈ splitLines(ruleInput)
+        key, value = split(line, ": ")
+        key = parse(Int, key)
+        if '"' ∈ value
+            rules[key] = value[begin+1:end-1]
+        else
+            patterns = map(s -> parse.(Int, split(s)), strip.(split(value, '|')))
+            rules[key] = patterns
+        end
+    end
+    rules, messages
+end
+
+function part1(input::String = readInput(joinpath(@__DIR__, "input.txt")))
+    rules, messages = parseInput(input)
+    length(filter(msg->validate(msg, rules), messages))
+end
+
+function part2(input::String = readInput(joinpath(@__DIR__, "input.txt")))
+    rules, messages = parseInput(input)
+    rules[8] = [[42], [42, 8]]
+    rules[11] = [[42, 31], [42, 11, 31]]
+    length(filter(msg->validate(msg, rules), messages))
+end
+
+
 @test part1(sample1) == 2
 @test part1(sample2) == 2
 @show part1()
+@show part2()
 
 end  # module Day19

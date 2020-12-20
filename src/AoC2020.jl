@@ -29,4 +29,20 @@ function stringAsGrid(string::String)
     reduce(vcat, permutedims.(collect.(splitLines(string))))
 end
 
+export setLogStack
+stackDepth = length(stacktrace())
+function setLogStack()
+    global stackDepth
+    stackDepth = length(stacktrace())
+end
+
+export logStack
+function logStack(args...)
+    depth = length(stacktrace()) - stackDepth
+    for _ ∈ 1:depth
+        print("  ")
+    end
+    println(args...)
+end
+
 end # module
